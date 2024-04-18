@@ -3,6 +3,7 @@
 #include <math.h>
 #include <Novice.h>
 #include <assert.h>
+#include <cmath>
 
 struct Vector2 final {
 	float x;
@@ -896,4 +897,60 @@ inline Vector3 Transform(const Vector3& vector, const Matrix4x4 matrix) {
 	result.z /= w;
 
 	return result;
+}
+
+/// <summary>
+/// x軸回転行列
+/// </summary>
+/// <param name="radian"></param>
+/// <returns></returns>
+inline Matrix4x4 MakeRotateXMatrix(float radian) {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = 1.0f;
+	result.m[1][1] = std::cos(radian);
+	result.m[1][2] = std::sin(radian);
+	result.m[2][1] = -std::sin(radian);
+	result.m[2][2] = std::cos(radian);
+	result.m[3][3] = 1.0f;
+
+	return result;
+}
+
+/// <summary>
+/// y軸回転行列
+/// </summary>
+/// <param name="radian"></param>
+/// <returns></returns>
+inline Matrix4x4 MakeRotateYMatrix(float radian) {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = std::cos(radian);
+	result.m[0][2] = -std::sin(radian);
+	result.m[1][1] = 1.0f;
+	result.m[2][0] = std::sin(radian);
+	result.m[2][2] = std::cos(radian);
+	result.m[3][3] = 1.0f;
+
+	return result;
+
+}
+
+/// <summary>
+/// z軸回転行列
+/// </summary>
+/// <param name="radian"></param>
+/// <returns></returns>
+inline Matrix4x4 MakeRotateZMatrix(float radian) {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = std::cos(radian);
+	result.m[0][1] = std::sin(radian);
+	result.m[1][0] = -std::sin(radian);
+	result.m[1][1] = std::cos(radian);
+	result.m[2][2] = 1.0f;
+	result.m[3][3] = 1.0f;
+
+	return result;
+
 }
