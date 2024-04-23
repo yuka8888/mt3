@@ -970,3 +970,69 @@ inline Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, c
 
 	return Multiply(Multiply(MakeScaleMatrix(scale),rotateXYZMatrix), MakeTranslateMatrix(translate));
 }
+
+/// <summary>
+/// 透視投影行列
+/// </summary>
+/// <param name="fovY"></param>
+/// <param name="aspectRatio"></param>
+/// <param name="nearClip"></param>
+/// <param name="farCrip"></param>
+/// <returns></returns>
+inline Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farCrip) {
+	Matrix4x4 result = {};
+	
+	result.m[0][0] = 1.0f / aspectRatio * (1.0f / std::tanf(fovY / 2.0f));
+	result.m[1][1] = 1.0f / std::tanf(fovY / 2.0f);
+	result.m[2][2] = farCrip / (farCrip - nearClip);
+	result.m[2][3] = 1.0f;
+	result.m[3][2] = ( - nearClip * farCrip) / (farCrip - nearClip);
+	return result;
+}
+
+/// <summary>
+/// 正射影行列
+/// </summary>
+/// <param name="left"></param>
+/// <param name="top"></param>
+/// <param name="bottom"></param>
+/// <param name="nearClip"></param>
+/// <param name="farClip"></param>
+/// <returns></returns>
+Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = 2.0f / (right - left);
+	result.m[1][1] = 2.0f / (top - bottom);
+	result.m[2][2] = 1.0f / (farClip - nearClip);
+	result.m[3][0] = (left + right) / (left - right);
+	result.m[3][1] = (top + bottom) / (bottom - top);
+	result.m[3][2] = nearClip / (nearClip - farClip);
+	result.m[3][3] = 1.0f;
+
+	return result;
+}
+
+/// <summary>
+/// ビューポート変換行列
+/// </summary>
+/// <param name="left"></param>
+/// <param name="top"></param>
+/// <param name="width"></param>
+/// <param name="feight"></param>
+/// <param name="minDepth"></param>
+/// <param name="maxDepth"></param>
+/// <returns></returns>
+Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth) {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = width / 2.0f;
+	result.m[1][1] = -height / 2.0f;
+	result.m[2][2] = maxDepth - minDepth;
+	result.m[3][0] = left + width / 2.0f;
+	result.m[3][1] = top + height / 2.0f;
+	result.m[3][2] = minDepth;
+	result.m[3][3] = 1.0f;
+
+	return result;
+}
