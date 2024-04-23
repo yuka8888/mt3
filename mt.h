@@ -1019,7 +1019,7 @@ Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float botto
 /// <param name="left"></param>
 /// <param name="top"></param>
 /// <param name="width"></param>
-/// <param name="feight"></param>
+/// <param name="height"></param>
 /// <param name="minDepth"></param>
 /// <param name="maxDepth"></param>
 /// <returns></returns>
