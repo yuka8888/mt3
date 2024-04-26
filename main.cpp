@@ -3,26 +3,43 @@
 
 const char kWindowTitle[] = "GC1A_03_オノセ_ユウカ";
 
+const int kWindowWidth = 1280;
+const int kWindowHeight = 720;
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// ライブラリの初期化
-	Novice::Initialize(kWindowTitle, 1280, 720);
+	Novice::Initialize(kWindowTitle, kWindowWidth, kWindowHeight);
 
 	// キー入力結果を受け取る箱
-	char keys[256] = {0};
-	char preKeys[256] = {0};
+	char keys[256] = { 0 };
+	char preKeys[256] = { 0 };
 
-	Vector3 v1 = { 1.0f, 3.0f, -5.0f };
-	Vector3 v2 = { 4.0f, -1.0f, 2.0f };
-	float k = 4.0f;
+	Vector3 v1 = { 1.2f, -3.9f, 2.5f };
+	Vector3 v2 = { 2.8f, 0.4f, -1.3f };
+	Vector3 cross = Cross(v1, v2);
 
-	Vector3 resultAdd = Add(v1, v2);
-	Vector3 resultSubtract = Subtract(v1, v2);
-	Vector3 resultMultiply = Multiply(k, v1);
-	float resultDot = Dot(v1, v2);
-	float resultLength = Length(v1);
-	Vector3 resultNormalize = Normalize(v2);
+	Vector3 rotate = {};
+	Vector3 translate = {};
+	Vector3 cameraPosition = { 0,0,-5.0f };
+	Vector3 kLocalVertices[3] = {
+		{0.0f, 0.5f, 0.0f,},
+		{0.5f, -0.5f, 0.0f},
+		{-0.5f, -0.5f, 0.0f}
+	};
+
+	Matrix4x4 worldMatrix = {};
+	Matrix4x4 cameraMatrix = {};
+	Matrix4x4 viewMatrix = {};
+	Matrix4x4 projectionMatrix = {};
+	Matrix4x4 worldViewProjectionMatrix = {};
+	Matrix4x4 viewportMatrix = {};
+	Vector3 ScreenVertices[3] = {};
+	Vector3 ndcVertex[3] = {};
+
+	Vector3 a = {};
+	Vector3 b = {};
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -36,7 +53,38 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
-			
+
+		if (keys[DIK_W]) {
+			translate.z += 0.1f;
+		}
+		else if (keys[DIK_S]) {
+			translate.z -= 0.1f;
+		}
+		else if (keys[DIK_A]) {
+			translate.x -= 0.1f;
+		}
+		else if (keys[DIK_D]) {
+			translate.x += 0.1f;
+		}
+
+		rotate.y += 0.05f;
+
+
+		worldMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, rotate, translate);
+		cameraMatrix = MakeAffineMatrix({ 1.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 0.0f }, cameraPosition);
+		viewMatrix = Inverse(cameraMatrix);
+		projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
+		worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+		viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
+
+		for (uint32_t i = 0; i < 3; ++i) {
+			ndcVertex[i] = Transform(kLocalVertices[i], worldViewProjectionMatrix);
+			ScreenVertices[i] = Transform(ndcVertex[i], viewportMatrix);
+		}
+
+		a = Subtract(ndcVertex[0], ndcVertex[1]);
+		b = Subtract(ndcVertex[1], ndcVertex[2]);
+
 		///
 		/// ↑更新処理ここまで
 		///
@@ -44,12 +92,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		VectorScreenPrintf(0, 0, resultAdd, " : Add");
-		VectorScreenPrintf(0, kRowHeight, resultSubtract, " : Subtract");
-		VectorScreenPrintf(0, kRowHeight * 2, resultMultiply, " : Multiply");
-		Novice::ScreenPrintf(0, kRowHeight * 3, "%0.2f : Dot", resultDot);
-		Novice::ScreenPrintf(0, kRowHeight * 4, "%0.2f : Length", resultLength);
-		VectorScreenPrintf(0, kRowHeight * 5, resultNormalize, " : Normalize");
+
+		VectorScreenPrintf(0, 0, cross, "Cross");
+
+		if (Dot({ 0.0f, 0.0f, 1.0f }, Cross(a, b)) < 0) {
+			Novice::DrawTriangle(int(ScreenVertices[0].x), int(ScreenVertices[0].y), int(ScreenVertices[1].x), int(ScreenVertices[1].y), int(ScreenVertices[2].x), int(ScreenVertices[2].y), RED, kFillModeSolid);
+		}
 		///
 		/// ↑描画処理ここまで
 		///
