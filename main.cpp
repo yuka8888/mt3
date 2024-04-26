@@ -78,7 +78,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ndcVertex = Transform(kLocalVertices[i], worldViewProjectionMatrix);
 			ScreenVertices[i] = Transform(ndcVertex, viewportMatrix);
 		}
-		
+
 		///
 		/// ↑更新処理ここまで
 		///
