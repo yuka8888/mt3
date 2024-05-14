@@ -5,6 +5,9 @@
 #include <assert.h>
 #include <cmath>
 
+const int kWindowHeight = 720;
+const int kWindowWidth = 1280;
+
 struct Vector2 final {
 	float x;
 	float y;
@@ -63,6 +66,11 @@ struct Box {
 	Vector2 acceleratiion;
 	float mass;
 	unsigned int color;
+};
+
+struct Sphere {
+	Vector3 center;
+	float radius;
 };
 
 static const int kRowHeight = 20;
@@ -1051,4 +1059,119 @@ Vector3 Cross(const Vector3& v1, const Vector3& v2) {
 	result.z = v1.x * v2.y - v1.y * v2.x;
 
 	return result;
+}
+
+/// <summary>
+/// 球の描画
+/// </summary>
+/// <param name="sphere"></param>
+/// <param name="viewProjectionMatrix"></param>
+/// <param name="viewportMatrix"></param>
+/// <param name="color"></param>
+void DrawSphere(const Sphere& sphere, const Matrix4x4 viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	//分割数
+	const uint32_t kSubdivision = 12;
+	//緯度分割1つ分の角度
+	const float kLonEvery = 2 * 3.14f / kSubdivision;
+	const float kLatEvery = 3.14f / kSubdivision;
+
+	Vector3 ndcAVertex = {};
+	Vector3 ScreenAVertices = {};
+	Vector3 ndcBVertex = {};
+	Vector3 ScreenBVertices = {};
+	Vector3 ndcCVertex = {};
+	Vector3 ScreenCVertices = {};
+
+	//緯度の方向に分割　-π～π/2
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		//現在の緯度シータ
+		float lat = -3.14f / 2.0f + kLatEvery * latIndex;
+		//緯度の方向に分割 0 ～　2π
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			//現在の経度ファイ
+			float lon = lonIndex * kLonEvery;
+			//world座標系でのa,b,cを求める
+			Vector3 a, b, c;
+			a.x = sphere.center.x + sphere.radius * cosf(lat) * cosf(lon);
+			a.y = sphere.center.y + sphere.radius * sinf(lat);
+			a.z = sphere.center.z + sphere.radius * cosf(lat) * sinf(lon);
+
+			b.x = sphere.center.x + sphere.radius * cosf(lat + kLatEvery) * cosf(lon);
+			b.y = sphere.center.y + sphere.radius * sinf(lat + kLatEvery);
+			b.z = sphere.center.z + sphere.radius * cosf(lat + kLatEvery) * sinf(lon);
+
+			c.x = sphere.center.x + sphere.radius * cosf(lat) * cosf(lon + kLonEvery);
+			c.y = sphere.center.y + sphere.radius * sinf(lat);
+			c.z = sphere.center.z + sphere.radius * cosf(lat) * sinf(lon + kLonEvery);
+
+
+			//a,b,cをScreen座標系まで変換
+			ndcAVertex = Transform(a, viewProjectionMatrix);
+			ScreenAVertices = Transform(ndcAVertex, viewportMatrix);
+			ndcBVertex = Transform(b, viewProjectionMatrix);
+			ScreenBVertices = Transform(ndcBVertex, viewportMatrix);
+			ndcCVertex = Transform(c, viewProjectionMatrix);
+			ScreenCVertices = Transform(ndcCVertex, viewportMatrix);
+			//ab,bcで線を引く
+			Novice::DrawLine((int)ScreenAVertices.x, (int)ScreenAVertices.y, (int)ScreenBVertices.x, (int)ScreenBVertices.y, color);
+			Novice::DrawLine((int)ScreenAVertices.x, (int)ScreenAVertices.y, (int)ScreenCVertices.x, (int)ScreenCVertices.y, color);
+		}
+	}
+
+
+}
+
+/// <summary>
+/// グリッドの描画
+/// </summary>
+/// <param name="viewProjectionMatrix"></param>
+/// <param name="viewportMatrix"></param>
+void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4 viewportMatrix) {
+	//グリッドの半分の幅
+	const float kGridHalfWidth = 2.0f;
+	//分割数
+	const uint32_t kSubdivision = 10;
+	//一つ分の長さ
+	const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision);
+
+	Vector3 startPoint = {};
+	Vector3 endPoint = {};
+
+	Vector3 ndcStartVertex = {};
+	Vector3 ScreenStartVertices = {};
+	Vector3 ndcEndVertex = {};
+	Vector3 ScreenEndVertices = {};
+
+	
+	//奥から手前の線を徐々に引いていく
+	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex) {
+		startPoint.x = kGridHalfWidth - kGridEvery * xIndex;
+		startPoint.z = -kGridHalfWidth;
+		endPoint.x = kGridHalfWidth - kGridEvery * xIndex;
+		endPoint.z = kGridHalfWidth;
+		
+		ndcStartVertex = Transform(startPoint, viewProjectionMatrix);
+		ScreenStartVertices = Transform(ndcStartVertex, viewportMatrix);
+
+		ndcEndVertex = Transform(endPoint, viewProjectionMatrix);
+		ScreenEndVertices = Transform(ndcEndVertex, viewportMatrix);
+	
+		Novice::DrawLine(int(ScreenStartVertices.x), int(ScreenStartVertices.y), int(ScreenEndVertices.x), int(ScreenEndVertices.y), 0xAAAAAAFF);
+	}
+
+	//奥から手前の線を徐々に引いていく
+	for (uint32_t zIndex = 0; zIndex <= kSubdivision; ++zIndex) {
+		startPoint.z = kGridHalfWidth - kGridEvery * zIndex;
+		startPoint.x = -kGridHalfWidth;
+		endPoint.z = kGridHalfWidth - kGridEvery * zIndex;
+		endPoint.x = kGridHalfWidth;
+
+		ndcStartVertex = Transform(startPoint, viewProjectionMatrix);
+		ScreenStartVertices = Transform(ndcStartVertex, viewportMatrix);
+
+		ndcEndVertex = Transform(endPoint, viewProjectionMatrix);
+		ScreenEndVertices = Transform(ndcEndVertex, viewportMatrix);
+
+		Novice::DrawLine(int(ScreenStartVertices.x), int(ScreenStartVertices.y), int(ScreenEndVertices.x), int(ScreenEndVertices.y), 0xAAAAAAFF);
+	}
 }
