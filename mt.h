@@ -3,6 +3,10 @@
 #include <math.h>
 #include <Novice.h>
 #include <assert.h>
+#include <cmath>
+
+const int kWindowHeight = 720;
+const int kWindowWidth = 1280;
 
 struct Vector2 final {
 	float x;
@@ -27,6 +31,24 @@ struct Vertex final {
 	float bottom;
 };
 
+//直線
+struct Line final {
+	Vector3 origin; //始点
+	Vector3 diff; //終点への差分ベクトル
+};
+
+//半直線
+struct Ray final {
+	Vector3 origin; //始点
+	Vector3 diff; //終点への差分ベクトル
+};
+
+//線分
+struct Segment final {
+	Vector3 origin; //始点
+	Vector3 diff; //終点への差分ベクトル
+};
+
 struct ForCorners final {
 	Vector2 topLeft;
 	Vector2 topRight;
@@ -37,8 +59,13 @@ struct ForCorners final {
 struct Matrix2x2 final {
 	float m[2][2];
 };
+
 struct Matrix3x3 final {
 	float m[3][3];
+};
+
+struct Matrix4x4 final {
+	float m[4][4];
 };
 
 struct Balls final {
@@ -57,6 +84,11 @@ struct Box {
 	Vector2 acceleratiion;
 	float mass;
 	unsigned int color;
+};
+
+struct Sphere {
+	Vector3 center;
+	float radius;
 };
 
 static const int kRowHeight = 20;
@@ -637,4 +669,548 @@ inline void VectorScreenPrintf(int x, int y, const Vector3& vector, const char* 
 	Novice::ScreenPrintf(x + kColumnWidth, y, "%.02f", vector.y);
 	Novice::ScreenPrintf(x + kColumnWidth * 2, y, "%.02f", vector.z);
 	Novice::ScreenPrintf(x + kColumnWidth * 3, y, "%s", label);
+}
+
+/// <summary>
+/// 行列の加算
+/// </summary>
+/// <param name="m1"></param>
+/// <param name="m2"></param>
+/// <returns></returns>
+inline Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2) {
+	Matrix4x4 m3 = {};
+
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			m3.m[i][j] = m1.m[i][j] + m2.m[i][j];
+		}
+	}
+
+	return m3;
+}
+
+/// <summary>
+/// 行列の減算
+/// </summary>
+/// <param name="m1"></param>
+/// <param name="m2"></param>
+/// <returns></returns>
+inline Matrix4x4 Subtract(const Matrix4x4& m1, const Matrix4x4& m2) {
+	Matrix4x4 m3 = {};
+
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			m3.m[i][j] = m1.m[i][j] - m2.m[i][j];
+		}
+	}
+
+	return m3;
+
+}
+
+/// <summary>
+/// 行列の積
+/// </summary>
+/// <param name="m1"></param>
+/// <param name="m2"></param>
+/// <returns></returns>
+inline Matrix4x4 Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
+	Matrix4x4 m3 = {};
+
+	m3.m[0][0] = m1.m[0][0] * m2.m[0][0] + m1.m[0][1] * m2.m[1][0] + m1.m[0][2] * m2.m[2][0] + m1.m[0][3] * m2.m[3][0];
+	m3.m[0][1] = m1.m[0][0] * m2.m[0][1] + m1.m[0][1] * m2.m[1][1] + m1.m[0][2] * m2.m[2][1] + m1.m[0][3] * m2.m[3][1];
+	m3.m[0][2] = m1.m[0][0] * m2.m[0][2] + m1.m[0][1] * m2.m[1][2] + m1.m[0][2] * m2.m[2][2] + m1.m[0][3] * m2.m[3][2];
+	m3.m[0][3] = m1.m[0][0] * m2.m[0][3] + m1.m[0][1] * m2.m[1][3] + m1.m[0][2] * m2.m[2][3] + m1.m[0][3] * m2.m[3][3];
+	m3.m[1][0] = m1.m[1][0] * m2.m[0][0] + m1.m[1][1] * m2.m[1][0] + m1.m[1][2] * m2.m[2][0] + m1.m[1][3] * m2.m[3][0];
+	m3.m[1][1] = m1.m[1][0] * m2.m[0][1] + m1.m[1][1] * m2.m[1][1] + m1.m[1][2] * m2.m[2][1] + m1.m[1][3] * m2.m[3][1];
+	m3.m[1][2] = m1.m[1][0] * m2.m[0][2] + m1.m[1][1] * m2.m[1][2] + m1.m[1][2] * m2.m[2][2] + m1.m[1][3] * m2.m[3][2];
+	m3.m[1][3] = m1.m[1][0] * m2.m[0][3] + m1.m[1][1] * m2.m[1][3] + m1.m[1][2] * m2.m[2][3] + m1.m[1][3] * m2.m[3][3];
+	m3.m[2][0] = m1.m[2][0] * m2.m[0][0] + m1.m[2][1] * m2.m[1][0] + m1.m[2][2] * m2.m[2][0] + m1.m[2][3] * m2.m[3][0];
+	m3.m[2][1] = m1.m[2][0] * m2.m[0][1] + m1.m[2][1] * m2.m[1][1] + m1.m[2][2] * m2.m[2][1] + m1.m[2][3] * m2.m[3][1];
+	m3.m[2][2] = m1.m[2][0] * m2.m[0][2] + m1.m[2][1] * m2.m[1][2] + m1.m[2][2] * m2.m[2][2] + m1.m[2][3] * m2.m[3][2];
+	m3.m[2][3] = m1.m[2][0] * m2.m[0][3] + m1.m[2][1] * m2.m[1][3] + m1.m[2][2] * m2.m[2][3] + m1.m[2][3] * m2.m[3][3];
+	m3.m[3][0] = m1.m[3][0] * m2.m[0][0] + m1.m[3][1] * m2.m[1][0] + m1.m[3][2] * m2.m[2][0] + m1.m[3][3] * m2.m[3][0];
+	m3.m[3][1] = m1.m[3][0] * m2.m[0][1] + m1.m[3][1] * m2.m[1][1] + m1.m[3][2] * m2.m[2][1] + m1.m[3][3] * m2.m[3][1];
+	m3.m[3][2] = m1.m[3][0] * m2.m[0][2] + m1.m[3][1] * m2.m[1][2] + m1.m[3][2] * m2.m[2][2] + m1.m[3][3] * m2.m[3][2];
+	m3.m[3][3] = m1.m[3][0] * m2.m[0][3] + m1.m[3][1] * m2.m[1][3] + m1.m[3][2] * m2.m[2][3] + m1.m[3][3] * m2.m[3][3];
+
+	return m3;
+}
+
+/// <summary>
+/// 逆行列
+/// </summary>
+/// <param name="m"></param>
+/// <returns></returns>
+inline Matrix4x4 Inverse(const Matrix4x4& m) {
+	Matrix4x4 m2 = {};
+	float num = 1.0f /
+		(m.m[0][0] * m.m[1][1] * m.m[2][2] * m.m[3][3] +
+			m.m[0][0] * m.m[1][2] * m.m[2][3] * m.m[3][1] +
+			m.m[0][0] * m.m[1][3] * m.m[2][1] * m.m[3][2] -
+			m.m[0][0] * m.m[1][3] * m.m[2][2] * m.m[3][1] -
+			m.m[0][0] * m.m[1][2] * m.m[2][1] * m.m[3][3] -
+			m.m[0][0] * m.m[1][1] * m.m[2][3] * m.m[3][2] -
+			m.m[0][1] * m.m[1][0] * m.m[2][2] * m.m[3][3] -
+			m.m[0][2] * m.m[1][0] * m.m[2][3] * m.m[3][1] -
+			m.m[0][3] * m.m[1][0] * m.m[2][1] * m.m[3][2] +
+			m.m[0][3] * m.m[1][0] * m.m[2][2] * m.m[3][1] +
+			m.m[0][2] * m.m[1][0] * m.m[2][1] * m.m[3][3] +
+			m.m[0][1] * m.m[1][0] * m.m[2][3] * m.m[3][2] +
+			m.m[0][1] * m.m[1][2] * m.m[2][0] * m.m[3][3] +
+			m.m[0][2] * m.m[1][3] * m.m[2][0] * m.m[3][1] +
+			m.m[0][3] * m.m[1][1] * m.m[2][0] * m.m[3][2] -
+			m.m[0][3] * m.m[1][2] * m.m[2][0] * m.m[3][1] -
+			m.m[0][2] * m.m[1][1] * m.m[2][0] * m.m[3][3] -
+			m.m[0][1] * m.m[1][3] * m.m[2][0] * m.m[3][2] -
+			m.m[0][1] * m.m[1][2] * m.m[2][3] * m.m[3][0] -
+			m.m[0][2] * m.m[1][3] * m.m[2][1] * m.m[3][0] -
+			m.m[0][3] * m.m[1][1] * m.m[2][2] * m.m[3][0] +
+			m.m[0][3] * m.m[1][2] * m.m[2][1] * m.m[3][0] +
+			m.m[0][2] * m.m[1][1] * m.m[2][3] * m.m[3][0] +
+			m.m[0][1] * m.m[1][3] * m.m[2][2] * m.m[3][0]
+			);
+
+	m2.m[0][0] = num * (m.m[1][1] * m.m[2][2] * m.m[3][3] + m.m[1][2] * m.m[2][3] * m.m[3][1] + m.m[1][3] * m.m[2][1] * m.m[3][2]
+		- m.m[1][3] * m.m[2][2] * m.m[3][1] - m.m[1][2] * m.m[2][1] * m.m[3][3] - m.m[1][1] * m.m[2][3] * m.m[3][2]);
+	m2.m[0][1] = num * (-m.m[0][1] * m.m[2][2] * m.m[3][3] - m.m[0][2] * m.m[2][3] * m.m[3][1] - m.m[0][3] * m.m[2][1] * m.m[3][2]
+		+ m.m[0][3] * m.m[2][2] * m.m[3][1] + m.m[0][2] * m.m[2][1] * m.m[3][3] + m.m[0][1] * m.m[2][3] * m.m[3][2]);
+	m2.m[0][2] = num * (m.m[0][1] * m.m[1][2] * m.m[3][3] + m.m[0][2] * m.m[1][3] * m.m[3][1] + m.m[0][3] * m.m[1][1] * m.m[3][2]
+		- m.m[0][3] * m.m[1][2] * m.m[3][1] - m.m[0][2] * m.m[1][1] * m.m[3][3] - m.m[0][1] * m.m[1][3] * m.m[3][2]);
+	m2.m[0][3] = num * (-m.m[0][1] * m.m[1][2] * m.m[2][3] - m.m[0][2] * m.m[1][3] * m.m[2][1] - m.m[0][3] * m.m[1][1] * m.m[2][2]
+		+ m.m[0][3] * m.m[1][2] * m.m[2][1] + m.m[0][2] * m.m[1][1] * m.m[2][3] + m.m[0][1] * m.m[1][3] * m.m[2][2]);
+	m2.m[1][0] = num * (-m.m[1][0] * m.m[2][2] * m.m[3][3] - m.m[1][2] * m.m[2][3] * m.m[3][0] - m.m[1][3] * m.m[2][0] * m.m[3][2]
+		+ m.m[1][3] * m.m[2][2] * m.m[3][0] + m.m[1][2] * m.m[2][0] * m.m[3][3] + m.m[1][0] * m.m[2][3] * m.m[3][2]);
+	m2.m[1][1] = num * (m.m[0][0] * m.m[2][2] * m.m[3][3] + m.m[0][2] * m.m[2][3] * m.m[3][0] + m.m[0][3] * m.m[2][0] * m.m[3][2]
+		- m.m[0][3] * m.m[2][2] * m.m[3][0] - m.m[0][2] * m.m[2][0] * m.m[3][3] - m.m[0][0] * m.m[2][3] * m.m[3][2]);
+	m2.m[1][2] = num * (-m.m[0][0] * m.m[1][2] * m.m[3][3] - m.m[0][2] * m.m[1][3] * m.m[3][0] - m.m[0][3] * m.m[1][0] * m.m[3][2]
+		+ m.m[0][3] * m.m[1][2] * m.m[3][0] + m.m[0][2] * m.m[1][0] * m.m[3][3] + m.m[0][0] * m.m[1][3] * m.m[3][2]);
+	m2.m[1][3] = num * (m.m[0][0] * m.m[1][2] * m.m[2][3] + m.m[0][2] * m.m[1][3] * m.m[2][0] + m.m[0][3] * m.m[1][0] * m.m[2][2]
+		- m.m[0][3] * m.m[1][2] * m.m[2][0] - m.m[0][2] * m.m[1][0] * m.m[2][3] - m.m[0][0] * m.m[1][3] * m.m[2][2]);
+	m2.m[2][0] = num * (m.m[1][0] * m.m[2][1] * m.m[3][3] + m.m[1][1] * m.m[2][3] * m.m[3][0] + m.m[1][3] * m.m[2][0] * m.m[3][1]
+		- m.m[1][3] * m.m[2][1] * m.m[3][0] - m.m[1][1] * m.m[2][0] * m.m[3][3] - m.m[1][0] * m.m[2][3] * m.m[3][1]);
+	m2.m[2][1] = num * (-m.m[0][0] * m.m[2][1] * m.m[3][3] - m.m[0][1] * m.m[2][3] * m.m[3][0] - m.m[0][3] * m.m[2][0] * m.m[3][1]
+		+ m.m[0][3] * m.m[2][1] * m.m[3][0] + m.m[0][1] * m.m[2][0] * m.m[3][3] + m.m[0][0] * m.m[2][3] * m.m[3][1]);
+	m2.m[2][2] = num * (m.m[0][0] * m.m[1][1] * m.m[3][3] + m.m[0][1] * m.m[1][3] * m.m[3][0] + m.m[0][3] * m.m[1][0] * m.m[3][1]
+		- m.m[0][3] * m.m[1][1] * m.m[3][0] - m.m[0][1] * m.m[1][0] * m.m[3][3] - m.m[0][0] * m.m[1][3] * m.m[3][1]);
+	m2.m[2][3] = num * (-m.m[0][0] * m.m[1][1] * m.m[2][3] - m.m[0][1] * m.m[1][3] * m.m[2][0] - m.m[0][3] * m.m[1][0] * m.m[2][1]
+		+ m.m[0][3] * m.m[1][1] * m.m[2][0] + m.m[0][1] * m.m[1][0] * m.m[2][3] + m.m[0][0] * m.m[1][3] * m.m[2][1]);
+	m2.m[3][0] = num * (-m.m[1][0] * m.m[2][1] * m.m[3][2] - m.m[1][1] * m.m[2][2] * m.m[3][0] - m.m[1][2] * m.m[2][0] * m.m[3][1]
+		+ m.m[1][2] * m.m[2][1] * m.m[3][0] + m.m[1][1] * m.m[2][0] * m.m[3][2] + m.m[1][0] * m.m[2][2] * m.m[3][1]);
+	m2.m[3][1] = num * (m.m[0][0] * m.m[2][1] * m.m[3][2] + m.m[0][1] * m.m[2][2] * m.m[3][0] + m.m[0][2] * m.m[2][0] * m.m[3][1]
+		- m.m[0][2] * m.m[2][1] * m.m[3][0] - m.m[0][1] * m.m[2][0] * m.m[3][2] - m.m[0][0] * m.m[2][2] * m.m[3][1]);
+	m2.m[3][2] = num * (-m.m[0][0] * m.m[1][1] * m.m[3][2] - m.m[0][1] * m.m[1][2] * m.m[3][0] - m.m[0][2] * m.m[1][0] * m.m[3][1]
+		+ m.m[0][2] * m.m[1][1] * m.m[3][0] + m.m[0][1] * m.m[1][0] * m.m[3][2] + m.m[0][0] * m.m[1][2] * m.m[3][1]);
+	m2.m[3][3] = num * (m.m[0][0] * m.m[1][1] * m.m[2][2] + m.m[0][1] * m.m[1][2] * m.m[2][0] + m.m[0][2] * m.m[1][0] * m.m[2][1]
+		- m.m[0][2] * m.m[1][1] * m.m[2][0] - m.m[0][1] * m.m[1][0] * m.m[2][2] - m.m[0][0] * m.m[1][2] * m.m[2][1]);
+
+	return m2;
+
+}
+
+/// <summary>
+/// 転置行列
+/// </summary>
+/// <param name="m"></param>
+/// <returns></returns>
+inline Matrix4x4 Transpose(const Matrix4x4& m) {
+	Matrix4x4 m2 = {};
+
+	m2.m[0][0] = m.m[0][0];
+	m2.m[0][1] = m.m[1][0];
+	m2.m[0][2] = m.m[2][0];
+	m2.m[0][3] = m.m[3][0];
+	m2.m[1][0] = m.m[0][1];
+	m2.m[1][1] = m.m[1][1];
+	m2.m[1][2] = m.m[2][1];
+	m2.m[1][3] = m.m[3][1];
+	m2.m[2][0] = m.m[0][2];
+	m2.m[2][1] = m.m[1][2];
+	m2.m[2][2] = m.m[2][2];
+	m2.m[2][3] = m.m[3][2];
+	m2.m[3][0] = m.m[0][3];
+	m2.m[3][1] = m.m[1][3];
+	m2.m[3][2] = m.m[2][3];
+	m2.m[3][3] = m.m[3][3];
+
+	return m2;
+
+}
+
+/// <summary>
+/// 単位行列の作成
+/// </summary>
+/// <returns></returns>
+inline Matrix4x4 MakeIdentity4x4() {
+	Matrix4x4 m = {};
+
+	m.m[0][0] = 1.0f;
+	m.m[1][1] = 1.0f;
+	m.m[2][2] = 1.0f;
+	m.m[3][3] = 1.0f;
+
+	return m;
+}
+
+/// <summary>
+/// 行列の表示
+/// </summary>
+/// <param name="x"></param>
+/// <param name="y"></param>
+/// <param name="matrix"></param>
+inline void MatrixScreenPrint(int x, int y, const Matrix4x4& matrix) {
+	for (int row = 0; row < 4; ++row) {
+		for (int column = 0; column < 4; ++column) {
+			Novice::ScreenPrintf(x + column * kColumnWidth, y + row * kRowHeight, "%6.02f", matrix.m[row][column]);
+		}
+	}
+}
+
+/// <summary>
+/// 平行移動行列
+/// </summary>
+/// <param name="translate"></param>
+/// <returns></returns>
+inline Matrix4x4 MakeTranslateMatrix(const Vector3& translate) {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = 1.0f;
+	result.m[1][1] = 1.0f;
+	result.m[2][2] = 1.0f;
+	result.m[3][0] = translate.x;
+	result.m[3][1] = translate.y;
+	result.m[3][2] = translate.z;
+	result.m[3][3] = 1.0f;
+
+	return result;
+}
+
+/// <summary>
+/// 拡大縮小行列
+/// </summary>
+/// <param name="scale"></param>
+/// <returns></returns>
+inline Matrix4x4 MakeScaleMatrix(const Vector3& scale) {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = scale.x;
+	result.m[1][1] = scale.y;
+	result.m[2][2] = scale.z;
+	result.m[3][3] = 1.0f;
+
+	return result;
+
+}
+
+/// <summary>
+/// 座標変換
+/// </summary>
+/// <param name="vector"></param>
+/// <param name="matrix"></param>
+/// <returns></returns>
+inline Vector3 Transform(const Vector3& vector, const Matrix4x4 matrix) {
+	Vector3 result = {};
+
+	result.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + vector.z * matrix.m[2][0] + 1.0f * matrix.m[3][0];
+	result.y = vector.x * matrix.m[0][1] + vector.y * matrix.m[1][1] + vector.z * matrix.m[2][1] + 1.0f * matrix.m[3][1];
+	result.z = vector.x * matrix.m[0][2] + vector.y * matrix.m[1][2] + vector.z * matrix.m[2][2] + 1.0f * matrix.m[3][2];
+	float w = vector.x * matrix.m[0][3] + vector.y * matrix.m[1][3] + vector.z * matrix.m[2][3] + 1.0f * matrix.m[3][3];
+
+	assert(w != 0);
+
+	result.x /= w;
+	result.y /= w;
+	result.z /= w;
+
+	return result;
+}
+
+/// <summary>
+/// x軸回転行列
+/// </summary>
+/// <param name="radian"></param>
+/// <returns></returns>
+inline Matrix4x4 MakeRotateXMatrix(float radian) {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = 1.0f;
+	result.m[1][1] = std::cos(radian);
+	result.m[1][2] = std::sin(radian);
+	result.m[2][1] = -std::sin(radian);
+	result.m[2][2] = std::cos(radian);
+	result.m[3][3] = 1.0f;
+
+	return result;
+}
+
+/// <summary>
+/// y軸回転行列
+/// </summary>
+/// <param name="radian"></param>
+/// <returns></returns>
+inline Matrix4x4 MakeRotateYMatrix(float radian) {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = std::cos(radian);
+	result.m[0][2] = -std::sin(radian);
+	result.m[1][1] = 1.0f;
+	result.m[2][0] = std::sin(radian);
+	result.m[2][2] = std::cos(radian);
+	result.m[3][3] = 1.0f;
+
+	return result;
+
+}
+
+/// <summary>
+/// z軸回転行列
+/// </summary>
+/// <param name="radian"></param>
+/// <returns></returns>
+inline Matrix4x4 MakeRotateZMatrix(float radian) {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = std::cos(radian);
+	result.m[0][1] = std::sin(radian);
+	result.m[1][0] = -std::sin(radian);
+	result.m[1][1] = std::cos(radian);
+	result.m[2][2] = 1.0f;
+	result.m[3][3] = 1.0f;
+
+	return result;
+
+}
+
+/// <summary>
+/// 3次元アフィン変換行列
+/// </summary>
+/// <param name="scale"></param>
+/// <param name="rotate"></param>
+/// <param name="translate"></param>
+/// <returns></returns>
+inline Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate) {
+	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
+	Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
+	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
+	Matrix4x4 rotateXYZMatrix = Multiply(rotateXMatrix, Multiply(rotateYMatrix, rotateZMatrix));
+
+	return Multiply(Multiply(MakeScaleMatrix(scale), rotateXYZMatrix), MakeTranslateMatrix(translate));
+}
+
+/// <summary>
+/// 透視投影行列
+/// </summary>
+/// <param name="fovY"></param>
+/// <param name="aspectRatio"></param>
+/// <param name="nearClip"></param>
+/// <param name="farCrip"></param>
+/// <returns></returns>
+inline Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farCrip) {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = 1.0f / aspectRatio * (1.0f / std::tanf(fovY / 2.0f));
+	result.m[1][1] = 1.0f / std::tanf(fovY / 2.0f);
+	result.m[2][2] = farCrip / (farCrip - nearClip);
+	result.m[2][3] = 1.0f;
+	result.m[3][2] = (-nearClip * farCrip) / (farCrip - nearClip);
+	return result;
+}
+
+/// <summary>
+/// 正射影行列
+/// </summary>
+/// <param name="left"></param>
+/// <param name="top"></param>
+/// <param name="bottom"></param>
+/// <param name="nearClip"></param>
+/// <param name="farClip"></param>
+/// <returns></returns>
+Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = 2.0f / (right - left);
+	result.m[1][1] = 2.0f / (top - bottom);
+	result.m[2][2] = 1.0f / (farClip - nearClip);
+	result.m[3][0] = (left + right) / (left - right);
+	result.m[3][1] = (top + bottom) / (bottom - top);
+	result.m[3][2] = nearClip / (nearClip - farClip);
+	result.m[3][3] = 1.0f;
+
+	return result;
+}
+
+/// <summary>
+/// ビューポート変換行列
+/// </summary>
+/// <param name="left"></param>
+/// <param name="top"></param>
+/// <param name="width"></param>
+/// <param name="height"></param>
+/// <param name="minDepth"></param>
+/// <param name="maxDepth"></param>
+/// <returns></returns>
+Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth) {
+	Matrix4x4 result = {};
+
+	result.m[0][0] = width / 2.0f;
+	result.m[1][1] = -height / 2.0f;
+	result.m[2][2] = maxDepth - minDepth;
+	result.m[3][0] = left + width / 2.0f;
+	result.m[3][1] = top + height / 2.0f;
+	result.m[3][2] = minDepth;
+	result.m[3][3] = 1.0f;
+
+	return result;
+}
+
+/// <summary>
+/// クロス積
+/// </summary>
+/// <param name="v1"></param>
+/// <param name="v2"></param>
+/// <returns></returns>
+Vector3 Cross(const Vector3& v1, const Vector3& v2) {
+	Vector3 result = {};
+
+	result.x = v1.y * v2.z - v1.z * v2.y;
+	result.y = v1.z * v2.x - v1.x * v2.z;
+	result.z = v1.x * v2.y - v1.y * v2.x;
+
+	return result;
+}
+
+/// <summary>
+/// 球の描画
+/// </summary>
+/// <param name="sphere"></param>
+/// <param name="viewProjectionMatrix"></param>
+/// <param name="viewportMatrix"></param>
+/// <param name="color"></param>
+void DrawSphere(const Sphere& sphere, const Matrix4x4 viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	//分割数
+	const uint32_t kSubdivision = 12;
+	//緯度分割1つ分の角度
+	const float kLonEvery = 2 * 3.14f / kSubdivision;
+	const float kLatEvery = 3.14f / kSubdivision;
+
+	Vector3 ndcAVertex = {};
+	Vector3 ScreenAVertices = {};
+	Vector3 ndcBVertex = {};
+	Vector3 ScreenBVertices = {};
+	Vector3 ndcCVertex = {};
+	Vector3 ScreenCVertices = {};
+
+	//緯度の方向に分割　-π～π/2
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		//現在の緯度シータ
+		float lat = -3.14f / 2.0f + kLatEvery * latIndex;
+		//緯度の方向に分割 0 ～　2π
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			//現在の経度ファイ
+			float lon = lonIndex * kLonEvery;
+			//world座標系でのa,b,cを求める
+			Vector3 a, b, c;
+			a.x = sphere.center.x + sphere.radius * cosf(lat) * cosf(lon);
+			a.y = sphere.center.y + sphere.radius * sinf(lat);
+			a.z = sphere.center.z + sphere.radius * cosf(lat) * sinf(lon);
+
+			b.x = sphere.center.x + sphere.radius * cosf(lat + kLatEvery) * cosf(lon);
+			b.y = sphere.center.y + sphere.radius * sinf(lat + kLatEvery);
+			b.z = sphere.center.z + sphere.radius * cosf(lat + kLatEvery) * sinf(lon);
+
+			c.x = sphere.center.x + sphere.radius * cosf(lat) * cosf(lon + kLonEvery);
+			c.y = sphere.center.y + sphere.radius * sinf(lat);
+			c.z = sphere.center.z + sphere.radius * cosf(lat) * sinf(lon + kLonEvery);
+
+
+			//a,b,cをScreen座標系まで変換
+			ndcAVertex = Transform(a, viewProjectionMatrix);
+			ScreenAVertices = Transform(ndcAVertex, viewportMatrix);
+			ndcBVertex = Transform(b, viewProjectionMatrix);
+			ScreenBVertices = Transform(ndcBVertex, viewportMatrix);
+			ndcCVertex = Transform(c, viewProjectionMatrix);
+			ScreenCVertices = Transform(ndcCVertex, viewportMatrix);
+			//ab,bcで線を引く
+			Novice::DrawLine((int)ScreenAVertices.x, (int)ScreenAVertices.y, (int)ScreenBVertices.x, (int)ScreenBVertices.y, color);
+			Novice::DrawLine((int)ScreenAVertices.x, (int)ScreenAVertices.y, (int)ScreenCVertices.x, (int)ScreenCVertices.y, color);
+		}
+	}
+
+
+}
+
+/// <summary>
+/// グリッドの描画
+/// </summary>
+/// <param name="viewProjectionMatrix"></param>
+/// <param name="viewportMatrix"></param>
+void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4 viewportMatrix) {
+	//グリッドの半分の幅
+	const float kGridHalfWidth = 2.0f;
+	//分割数
+	const uint32_t kSubdivision = 10;
+	//一つ分の長さ
+	const float kGridEvery = (kGridHalfWidth * 2.0f) / float(kSubdivision);
+
+	Vector3 startPoint = {};
+	Vector3 endPoint = {};
+
+	Vector3 ndcStartVertex = {};
+	Vector3 ScreenStartVertices = {};
+	Vector3 ndcEndVertex = {};
+	Vector3 ScreenEndVertices = {};
+
+
+	//奥から手前の線を徐々に引いていく
+	for (uint32_t xIndex = 0; xIndex <= kSubdivision; ++xIndex) {
+		startPoint.x = kGridHalfWidth - kGridEvery * xIndex;
+		startPoint.z = -kGridHalfWidth;
+		endPoint.x = kGridHalfWidth - kGridEvery * xIndex;
+		endPoint.z = kGridHalfWidth;
+
+		ndcStartVertex = Transform(startPoint, viewProjectionMatrix);
+		ScreenStartVertices = Transform(ndcStartVertex, viewportMatrix);
+
+		ndcEndVertex = Transform(endPoint, viewProjectionMatrix);
+		ScreenEndVertices = Transform(ndcEndVertex, viewportMatrix);
+
+		Novice::DrawLine(int(ScreenStartVertices.x), int(ScreenStartVertices.y), int(ScreenEndVertices.x), int(ScreenEndVertices.y), 0xAAAAAAFF);
+	}
+
+	//奥から手前の線を徐々に引いていく
+	for (uint32_t zIndex = 0; zIndex <= kSubdivision; ++zIndex) {
+		startPoint.z = kGridHalfWidth - kGridEvery * zIndex;
+		startPoint.x = -kGridHalfWidth;
+		endPoint.z = kGridHalfWidth - kGridEvery * zIndex;
+		endPoint.x = kGridHalfWidth;
+
+		ndcStartVertex = Transform(startPoint, viewProjectionMatrix);
+		ScreenStartVertices = Transform(ndcStartVertex, viewportMatrix);
+
+		ndcEndVertex = Transform(endPoint, viewProjectionMatrix);
+		ScreenEndVertices = Transform(ndcEndVertex, viewportMatrix);
+
+		Novice::DrawLine(int(ScreenStartVertices.x), int(ScreenStartVertices.y), int(ScreenEndVertices.x), int(ScreenEndVertices.y), 0xAAAAAAFF);
+	}
+}
+/// <summary>
+/// 正射影ベクトル
+/// </summary>
+/// <param name="v1"></param>
+/// <param name="v2"></param>
+/// <returns></returns>
+Vector3 Project(const Vector3& v1, const Vector3& v2) {
+	Vector3 result = {};
+
+	result = Dot(v1, Normalize(v2)) * Normalize(v2);
+}
+
+/// <summary>
+/// 最近接点
+/// </summary>
+/// <param name="point"></param>
+/// <param name="segment"></param>
+/// <returns></returns>
+Vector3 ClosestPoint(const Vector3& point, const Segment& segment) {
+
 }
