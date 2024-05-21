@@ -42,10 +42,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		MatrixScreenPrint(0, 0, rotateXMatrix);
-		MatrixScreenPrint(0, kRowHeight * 5, rotateYMatrix);
-		MatrixScreenPrint(0, kRowHeight * 5 * 2, rotateZMatrix);
-		MatrixScreenPrint(0, kRowHeight * 5 * 3, rotateXYZMatrix);
+		MatrixScreenPrint(0, 0, rotateXMatrix, "rotateXMatrix");
+		MatrixScreenPrint(0, kRowHeight * 5, rotateYMatrix, "rotateYMarix");
+		MatrixScreenPrint(0, kRowHeight * 5 * 2, rotateZMatrix, "rotateZMarix");
+		MatrixScreenPrint(0, kRowHeight * 5 * 3, rotateXYZMatrix, "rotateMarix");
 
 		///
 		/// ↑描画処理ここまで
