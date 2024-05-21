@@ -831,10 +831,11 @@ inline Matrix4x4 MakeIdentity4x4() {
 /// <param name="x"></param>
 /// <param name="y"></param>
 /// <param name="matrix"></param>
-inline void MatrixScreenPrint(int x, int y, const Matrix4x4& matrix) {
+inline void MatrixScreenPrint(int x, int y, const Matrix4x4& matrix, const char* label) {
+	Novice::ScreenPrintf(x, y, "%s\n", label);
 	for (int row = 0; row < 4; ++row) {
 		for (int column = 0; column < 4; ++column) {
-			Novice::ScreenPrintf(x + column * kColumnWidth, y + row * kRowHeight, "%6.02f", matrix.m[row][column]);
+			Novice::ScreenPrintf(x + column * kColumnWidth, y + (row + 1) * kRowHeight, "%6.02f", matrix.m[row][column]);
 		}
 	}
 }
