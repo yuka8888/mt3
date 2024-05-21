@@ -38,9 +38,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		MatrixScreenPrint(0, 0, orthographicMatrix);
-		MatrixScreenPrint(0, kRowHeight * 5, perspectiveFovMatrix);
-		MatrixScreenPrint(0, kRowHeight * 10, viewportMatrix);
+		MatrixScreenPrint(0, 0, orthographicMatrix, "orthographicMatrix");
+		MatrixScreenPrint(0, kRowHeight * 5, perspectiveFovMatrix, "perspectiveFovMatrix");
+		MatrixScreenPrint(0, kRowHeight * 10, viewportMatrix, "viewportMatrix");
 
 		///
 		/// ↑描画処理ここまで
