@@ -112,5 +112,6 @@
       <Filter>KamataEngine\Include</Filter>
     </ClInclude>
     <ClInclude Include="mt.h" />
+    <ClInclude Include="mt2.h" />
   </ItemGroup>
 </Project>

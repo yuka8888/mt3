@@ -4,6 +4,7 @@
 #include <Novice.h>
 #include <assert.h>
 #include <cmath>
+#include "Vector3.h"
 
 const int kWindowHeight = 720;
 const int kWindowWidth = 1280;
@@ -16,12 +17,6 @@ struct Vector2 final {
 struct Vector2i final {
 	int x;
 	int y;
-};
-
-struct Vector3 final {
-	float x;
-	float y;
-	float z;
 };
 
 struct Vertex final {
@@ -858,10 +853,11 @@ inline Matrix4x4 MakeIdentity4x4() {
 /// <param name="x"></param>
 /// <param name="y"></param>
 /// <param name="matrix"></param>
-inline void MatrixScreenPrint(int x, int y, const Matrix4x4& matrix) {
+inline void MatrixScreenPrint(int x, int y, const Matrix4x4& matrix, const char* label) {
+	Novice::ScreenPrintf(x, y, "%s\n", label);
 	for (int row = 0; row < 4; ++row) {
 		for (int column = 0; column < 4; ++column) {
-			Novice::ScreenPrintf(x + column * kColumnWidth, y + row * kRowHeight, "%6.02f", matrix.m[row][column]);
+			Novice::ScreenPrintf(x + column * kColumnWidth, y + (row + 1) * kRowHeight, "%6.02f", matrix.m[row][column]);
 		}
 	}
 }
@@ -1193,6 +1189,7 @@ void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4 viewportMat
 		Novice::DrawLine(int(ScreenStartVertices.x), int(ScreenStartVertices.y), int(ScreenEndVertices.x), int(ScreenEndVertices.y), 0xAAAAAAFF);
 	}
 }
+
 /// <summary>
 /// 正射影ベクトル
 /// </summary>
@@ -1202,7 +1199,11 @@ void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4 viewportMat
 Vector3 Project(const Vector3& v1, const Vector3& v2) {
 	Vector3 result = {};
 
-	result = Dot(v1, Normalize(v2)) * Normalize(v2);
+	result.x = Dot(v1, Normalize(v2)) * Normalize(v2).x;
+	result.y = Dot(v1, Normalize(v2)) * Normalize(v2).y;
+	result.z = Dot(v1, Normalize(v2)) * Normalize(v2).z;
+
+	return result;
 }
 
 /// <summary>
@@ -1212,5 +1213,7 @@ Vector3 Project(const Vector3& v1, const Vector3& v2) {
 /// <param name="segment"></param>
 /// <returns></returns>
 Vector3 ClosestPoint(const Vector3& point, const Segment& segment) {
-
+	Vector3 cp = {};
+	cp = Project(segment.origin, segment.diff) + segment.origin;
+	return Normalize(cp - point);
 }
