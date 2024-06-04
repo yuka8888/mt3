@@ -1,5 +1,6 @@
 #include <Novice.h>
 #include "mt.h"
+#include <imgui.h>
 
 const char kWindowTitle[] = "GC1A_03_オノセ_ユウカ";
 
@@ -63,6 +64,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 		DrawSphere(sphere, worldViewProjectionMatrix, viewportMatrix, BLUE);
+		
+		ImGui::Begin("Window");
+		ImGui::DragFloat3("CameraTranslate", &cameraTranslate.x, 0.01f);
+		ImGui::DragFloat3("CameraRotate", &cameraRotate.x, 0.01f);
+		ImGui::DragFloat3("sphereCenter", &sphere.center.x, 0.01f);
+		ImGui::DragFloat("sphereRadius", &sphere.radius, 0.01f);
+		ImGui::End();
 		///
 		/// ↑描画処理ここまで
 		///
