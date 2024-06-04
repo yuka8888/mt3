@@ -1214,6 +1214,6 @@ Vector3 Project(const Vector3& v1, const Vector3& v2) {
 /// <returns></returns>
 Vector3 ClosestPoint(const Vector3& point, const Segment& segment) {
 	Vector3 cp = {};
-	cp = Project(segment.origin, segment.diff) + segment.origin;
-	return Normalize(cp - point);
+	Vector3 result = {};
+	return Add( Project(Subtract( point, segment.origin), segment.diff), segment.origin);
 }
