@@ -1059,6 +1059,15 @@ Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, f
 	return result;
 }
 
+Matrix4x4 MakeViewProjectionMatrix(Vector3 scale, Vector3 rotate, Vector3 translate, Vector3 cameraScale, Vector3 cameraRotate,Vector3 cameraTranslate) {
+	Matrix4x4 worldMatrix = MakeAffineMatrix(scale, rotate, translate);
+	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraScale, cameraRotate, cameraTranslate);
+	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
+	return (Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix)));
+
+}
+
 /// <summary>
 /// クロス積
 /// </summary>
@@ -1217,3 +1226,38 @@ Vector3 ClosestPoint(const Vector3& point, const Segment& segment) {
 	Vector3 result = {};
 	return Add( Project(Subtract( point, segment.origin), segment.diff), segment.origin);
 }
+
+Vector3 operator+(Vector3 num1, Vector3 num2) {
+	num1.x += num2.x;
+	num1.y += num2.y;
+	num1.z += num2.z;
+
+	return num1;
+}
+
+Vector3 operator-(Vector3 num1, Vector3 num2) {
+	num1.x -= num2.x;
+	num1.y -= num2.y;
+	num1.z -= num2.z;
+
+	return num1;
+}
+
+/// <summary>
+/// 球同士の衝突判定
+/// </summary>
+/// <param name="s1"></param>
+/// <param name="s2"></param>
+/// <returns></returns>
+bool isCollision(const Sphere& s1, const Sphere& s2) {
+	//二つの球の中心点間の距離を求める
+	float distance = Length(s2.center - s1.center);
+
+	//半径の合計よりも短ければ衝突
+	if (distance <= s1.radius + s2.radius) {
+		return true;
+	}
+
+	return false;
+}
+
