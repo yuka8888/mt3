@@ -44,6 +44,11 @@ struct Segment final {
 	Vector3 diff; //終点への差分ベクトル
 };
 
+struct Plane {
+	Vector3 normal; //法線
+	float distance; //距離
+};
+
 struct ForCorners final {
 	Vector2 topLeft;
 	Vector2 topRight;
@@ -1261,3 +1266,58 @@ bool isCollision(const Sphere& s1, const Sphere& s2) {
 	return false;
 }
 
+/// <summary>
+/// 球と平面の衝突判定
+/// </summary>
+/// <param name="sphere"></param>
+/// <param name="plane"></param>
+/// <returns></returns>
+bool isCollision(const Sphere& sphere, const Plane& plane) {
+	if (sphere.radius >= fabsf(Dot(plane.normal, sphere.center) - plane.distance)) {
+		return true;
+	}
+
+	return false;
+}
+
+/// <summary>
+/// 垂直なベクトルを求める
+/// </summary>
+/// <param name="vector"></param>
+/// <returns></returns>
+Vector3 Perpendicular(const Vector3& vector) {
+	if (vector.x != 0.0f || vector.y != 0.0f) {
+		return { -vector.y, vector.x, 0.0f };
+	}
+
+	return { 0.0f, -vector.z, vector.y };
+}
+
+/// <summary>
+/// 平面の描画
+/// </summary>
+/// <param name="plane"></param>
+/// <param name="viewProjectionMatrix"></param>
+/// <param name="viewportMatrix"></param>
+/// <param name="color"></param>
+void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	Vector3 center = Multiply(plane.distance, plane.normal);
+	Vector3 perpendiculars[4];
+
+	perpendiculars[0] = Normalize(Perpendicular(plane.normal));
+	perpendiculars[1] = {-perpendiculars[0].x, -perpendiculars[0].y, -perpendiculars[0].z};
+	perpendiculars[2] = Cross(plane.normal, perpendiculars[0]);
+	perpendiculars[3] = {-perpendiculars[2].x, -perpendiculars[2].y, -perpendiculars[2].z};
+
+	Vector3 points[4];
+	for (int32_t i = 0; i < 4; ++i) {
+		Vector3 extend = Multiply(2.0f, perpendiculars[i]);
+		Vector3 point = Add(center, extend);
+		points[i] = Transform(Transform(point, viewProjectionMatrix), viewportMatrix);
+	}
+
+	Novice::DrawLine(int(points[0].x), int(points[0].y), int(points[2].x), int(points[2].y), color);
+	Novice::DrawLine(int(points[1].x), int(points[1].y), int(points[2].x), int(points[2].y), color);
+	Novice::DrawLine(int(points[3].x), int(points[3].y), int(points[1].x), int(points[1].y), color);
+	Novice::DrawLine(int(points[3].x), int(points[3].y), int(points[0].x), int(points[0].y), color);
+}

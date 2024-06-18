@@ -14,15 +14,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
-	Sphere sphere1{ {0.0f, 0.0f, 0.0f}, 0.5f };
-	Sphere sphere2{ {0.0f, 0.0f, 1.0f}, 0.3f };
-
+	Sphere sphere{ {0.0f, 0.0f, 0.0f}, 0.5f };
+	Plane plane{ {0.0f, -1.0f, 0.0f},{1.0f} };
 	uint32_t color = WHITE;
 
 	Vector3 rotate = {};
 	Vector3 translate = {};
-	Vector3 cameraRotate = { 0.5f, 0.0f, 0.0f };
-	Vector3 cameraTranslate = {0.0f, 5.9f, -9.49f };
+	Vector3 cameraRotate = { 0.0f, 0.0f, 0.0f };
+	Vector3 cameraTranslate = {0.0f, 0.0f, -9.49f };
 	Vector3 cameraPosition = { 0,0,-5.0f };
 
 	Vector3 start{};
@@ -45,7 +44,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		viewProjectionMatrix = MakeViewProjectionMatrix({ 1, 1, 1 }, rotate, translate, { 1, 1, 1 }, cameraRotate, cameraTranslate);
 		viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
-		if (isCollision(sphere1, sphere2)) {
+		if (isCollision(sphere, plane)) {
 			color = RED;
 		}
 		else {
@@ -53,12 +52,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		}
 
 
-		ImGui::DragFloat3("Sphere1.center", &sphere1.center.x, 0.01f);
-		ImGui::DragFloat("Sphere1.radius", &sphere1.radius, 0.01f);
-		ImGui::DragFloat3("Sphere2.center", &sphere2.center.x, 0.01f);
-		ImGui::DragFloat("Sphere2.radius", &sphere2.radius, 0.01f);
+		ImGui::DragFloat3("Sphere.center", &sphere.center.x, 0.01f);
+		ImGui::DragFloat("Sphere.radius", &sphere.radius, 0.01f);
+		ImGui::DragFloat("Plane.distance", &plane.distance, 0.01f);
+		ImGui::DragFloat3("Plane.normal", &plane.normal.x, 0.01f);
 		ImGui::DragFloat3("cameraRotate", &cameraRotate.x, 0.01f);
 		ImGui::DragFloat3("cameraTranslate", &cameraTranslate.x, 0.01f);
+		plane.normal = Normalize(plane.normal);
+		
 		///
 		/// ↑更新処理ここまで
 		///
@@ -67,9 +68,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 
-		DrawSphere(sphere1, viewProjectionMatrix, viewportMatrix, color);
-		DrawSphere(sphere2, viewProjectionMatrix, viewportMatrix, WHITE);
-
+		DrawSphere(sphere, viewProjectionMatrix, viewportMatrix, color);
+		DrawPlane(plane, viewProjectionMatrix, viewportMatrix, WHITE);
 		DrawGrid(viewProjectionMatrix, viewportMatrix);
 
 		/// 
