@@ -5,6 +5,8 @@
 #include <assert.h>
 #include <cmath>
 #include "Vector3.h"
+#include <imgui.h>
+
 
 const int kWindowHeight = 720;
 const int kWindowWidth = 1280;
@@ -1320,4 +1322,112 @@ void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const 
 	Novice::DrawLine(int(points[1].x), int(points[1].y), int(points[2].x), int(points[2].y), color);
 	Novice::DrawLine(int(points[3].x), int(points[3].y), int(points[1].x), int(points[1].y), color);
 	Novice::DrawLine(int(points[3].x), int(points[3].y), int(points[0].x), int(points[0].y), color);
+}
+
+/// <summary>
+/// 直線と平面の衝突判定
+/// </summary>
+/// <param name="line"></param>
+/// <param name="plane"></param>
+/// <returns></returns>
+bool IsCollision(const Line& line, const Plane& plane) {
+	float dot = Dot(plane.normal, line.diff);
+
+	if (dot == 0.0f) {
+		return false;
+	}
+
+	float t = (plane.distance - Dot(line.origin, plane.normal)) / dot;
+
+	if (t == -1.0f) {
+		return true;
+	}
+
+	return false;
+}
+
+/// <summary>
+/// 半直線と平面の衝突判定
+/// </summary>
+/// <param name="ray"></param>
+/// <param name="plane"></param>
+/// <returns></returns>
+bool IsCollision(const Ray& ray, const Plane& plane) {
+	float dot = Dot(plane.normal, ray.diff);
+
+	if (dot == 0.0f) {
+		return false;
+	}
+
+	float t = (plane.distance - Dot(ray.origin, plane.normal)) / dot;
+
+	if (t == 2.0f) {
+		return true;
+	}
+
+	return false;
+}
+
+/// <summary>
+/// 線分と平面の衝突判定
+/// </summary>
+/// <param name="segment"></param>
+/// <param name="plane"></param>
+/// <returns></returns>
+bool IsCollision(const Segment& segment, const Plane& plane) {
+	float dot = Dot(plane.normal, segment.diff);
+
+	if (dot == 0.0f) {
+		return false;
+	}
+
+	float t = (plane.distance - Dot(segment.origin, plane.normal)) / dot;
+
+	if (t >= 0.0f && t <= 1.0f) {
+		return true;
+	}
+
+	return false;
+}
+
+/// <summary>
+/// 直線の描画
+/// </summary>
+/// <param name="line"></param>
+/// <param name="viewProjectionMatrix"></param>
+/// <param name="viewportMatrix"></param>
+/// <param name="color"></param>
+void DrawSegment(const Line& line, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	Vector3 start = Transform(Transform(line.origin, viewProjectionMatrix), viewportMatrix);
+	Vector3 end = Transform(Transform(Add(line.origin, line.diff), viewProjectionMatrix), viewportMatrix);
+
+	Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
+}
+
+/// <summary>
+/// 半直線の描画
+/// </summary>
+/// <param name="ray"></param>
+/// <param name="viewProjectionMatrix"></param>
+/// <param name="viewportMatrix"></param>
+/// <param name="color"></param>
+void DrawSegment(const Ray& ray, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	Vector3 start = Transform(Transform(ray.origin, viewProjectionMatrix), viewportMatrix);
+	Vector3 end = Transform(Transform(Add(ray.origin, ray.diff), viewProjectionMatrix), viewportMatrix);
+
+	Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
+}
+
+/// <summary>
+/// 線分の描画
+/// </summary>
+/// <param name="segment"></param>
+/// <param name="viewProjectionMatrix"></param>
+/// <param name="viewportMatrix"></param>
+/// <param name="color"></param>
+void DrawSegment(const Segment& segment, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	Vector3 start = Transform(Transform(segment.origin, viewProjectionMatrix), viewportMatrix);
+	Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), viewProjectionMatrix), viewportMatrix);
+
+	Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
 }
