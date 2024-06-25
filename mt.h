@@ -92,6 +92,9 @@ struct Sphere {
 	Vector3 center;
 	float radius;
 };
+struct Triangle {
+	Vector3 vertices[3]; //頂点
+};
 
 static const int kRowHeight = 20;
 static const int kColumnWidth = 60;
@@ -1430,4 +1433,14 @@ void DrawSegment(const Segment& segment, const Matrix4x4& viewProjectionMatrix, 
 	Vector3 end = Transform(Transform(Add(segment.origin, segment.diff), viewProjectionMatrix), viewportMatrix);
 
 	Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
+}
+
+/// <summary>
+/// 三角形と線分の衝突判定
+/// </summary>
+/// <param name="triangle"></param>
+/// <param name="segment"></param>
+/// <returns></returns>
+bool isCollision(const Triangle& triangle, const Segment& segment) {
+
 }
