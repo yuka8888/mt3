@@ -1069,7 +1069,7 @@ Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, f
 	return result;
 }
 
-Matrix4x4 MakeViewProjectionMatrix(Vector3 scale, Vector3 rotate, Vector3 translate, Vector3 cameraScale, Vector3 cameraRotate,Vector3 cameraTranslate) {
+Matrix4x4 MakeViewProjectionMatrix(Vector3 scale, Vector3 rotate, Vector3 translate, Vector3 cameraScale, Vector3 cameraRotate, Vector3 cameraTranslate) {
 	Matrix4x4 worldMatrix = MakeAffineMatrix(scale, rotate, translate);
 	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraScale, cameraRotate, cameraTranslate);
 	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
@@ -1234,7 +1234,7 @@ Vector3 Project(const Vector3& v1, const Vector3& v2) {
 Vector3 ClosestPoint(const Vector3& point, const Segment& segment) {
 	Vector3 cp = {};
 	Vector3 result = {};
-	return Add( Project(Subtract( point, segment.origin), segment.diff), segment.origin);
+	return Add(Project(Subtract(point, segment.origin), segment.diff), segment.origin);
 }
 
 Vector3 operator+(Vector3 num1, Vector3 num2) {
@@ -1310,9 +1310,9 @@ void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const 
 	Vector3 perpendiculars[4];
 
 	perpendiculars[0] = Normalize(Perpendicular(plane.normal));
-	perpendiculars[1] = {-perpendiculars[0].x, -perpendiculars[0].y, -perpendiculars[0].z};
+	perpendiculars[1] = { -perpendiculars[0].x, -perpendiculars[0].y, -perpendiculars[0].z };
 	perpendiculars[2] = Cross(plane.normal, perpendiculars[0]);
-	perpendiculars[3] = {-perpendiculars[2].x, -perpendiculars[2].y, -perpendiculars[2].z};
+	perpendiculars[3] = { -perpendiculars[2].x, -perpendiculars[2].y, -perpendiculars[2].z };
 
 	Vector3 points[4];
 	for (int32_t i = 0; i < 4; ++i) {
@@ -1442,5 +1442,26 @@ void DrawSegment(const Segment& segment, const Matrix4x4& viewProjectionMatrix, 
 /// <param name="segment"></param>
 /// <returns></returns>
 bool isCollision(const Triangle& triangle, const Segment& segment) {
+	Vector3 v01 = triangle.vertices[0] - triangle.vertices[1];
+	Vector3 v12 = triangle.vertices[1] - triangle.vertices[2];
+	Vector3 v20 = triangle.vertices[2] - triangle.vertices[0];
+	segment;
+	//Vector3 p = segment.origin +  
+	//
+	//	Vector3 v0p{}, v1p{}, v2p{};
+
+	return false;
+}
+
+void DrawTriangle(const Triangle& triangle, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	Vector3 start[3];
+	Vector3 end[3];
+
+	for (uint32_t i = 0; i < 3; i++) {
+		start[i] = Transform(Transform(triangle.vertices[i], viewProjectionMatrix), viewportMatrix);
+		end[i] = Transform(Transform(triangle.vertices[(i + 1) % 3], viewProjectionMatrix), viewportMatrix);
+		Novice::DrawLine(int(start[i].x), int(start[i].y), int(end[i].x), int(end[i].y), color);
+	}
+
 
 }
