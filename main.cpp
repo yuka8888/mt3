@@ -14,10 +14,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = { 0 };
 	char preKeys[256] = { 0 };
 
-	Triangle triangle;
-	triangle.vertices[0] = { -1.0f, 0.0f, 0.0f };
-	triangle.vertices[1] = { 0.0f, 1.0f, 0.0f };
-	triangle.vertices[2] = { 1.0f, 0.0f, 0.0f };
+	Plane plane = { {0.0f, 1.0f, 0.0f} , 1.0f };
 
 	Segment segment{ {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f} };
 	uint32_t color = WHITE;
@@ -48,7 +45,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		viewProjectionMatrix = MakeViewProjectionMatrix({ 1, 1, 1 }, rotate, translate, { 1, 1, 1 }, cameraRotate, cameraTranslate);
 		viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
-		if (isCollision(triangle, segment)) {
+		if (IsCollision(segment, plane)) {
 			color = RED;
 		}
 		else {
@@ -58,9 +55,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		ImGui::DragFloat3("segment.origin", &segment.origin.x, 0.01f);
 		ImGui::DragFloat3("segment.diff", &segment.diff.x, 0.01f);
-		ImGui::DragFloat3("triangle.vertices[0]", &triangle.vertices[0].x, 0.01f);
-		ImGui::DragFloat3("triangle.vertices[1]", &triangle.vertices[1].x, 0.01f);
-		ImGui::DragFloat3("triangle.vertices[2]", &triangle.vertices[2].x, 0.01f);
+		ImGui::DragFloat("plane.distance", &plane.distance, 0.01f);
+		ImGui::DragFloat3("plane.normal", &plane.normal.x, 0.01f);
 		ImGui::DragFloat3("cameraRotate", &cameraRotate.x, 0.01f);
 		ImGui::DragFloat3("cameraTranslate", &cameraTranslate.x, 0.01f);
 		
@@ -73,7 +69,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 
 		DrawSegment(segment, viewProjectionMatrix, viewportMatrix, color);
-		DrawTriangle(triangle, viewProjectionMatrix, viewportMatrix, WHITE);
+		DrawPlane(plane, viewProjectionMatrix, viewportMatrix, WHITE);
 		DrawGrid(viewProjectionMatrix, viewportMatrix);
 
 		/// 
