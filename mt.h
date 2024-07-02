@@ -1553,3 +1553,35 @@ bool IsCollision(const AABB& aabb, const Sphere& sphere) {
 	return false;
 }
 
+/// <summary>
+/// AABBと線分の衝突判定
+/// </summary>
+/// <param name="aabb"></param>
+/// <param name="segment"></param>
+/// <returns></returns>
+bool IsCollision(const AABB& aabb, const Segment& segment) {
+	float tXMin = (aabb.min.x - segment.origin.x) / segment.diff.x;
+	float tYMin = (aabb.min.y - segment.origin.y) / segment.diff.y;
+	float tZMin = (aabb.min.z - segment.origin.z) / segment.diff.z;
+	float tXMax = (aabb.max.x - segment.origin.x) / segment.diff.x;
+	float tYMax = (aabb.max.y - segment.origin.y) / segment.diff.y;
+	float tZMax = (aabb.max.z - segment.origin.z) / segment.diff.z;
+
+	float tNearX = min(tXMin, tXMax);
+	float tNearY = min(tYMin, tYMax);
+	float tNearZ = min(tZMin, tZMax);
+	float tFarX = max(tXMin, tXMax);
+	float tFarY = max(tYMin, tYMax);
+	float tFarZ = max(tZMin, tZMax);
+
+	//AABBとの衝突店（貫通店）のtが小さいほう
+	float tMin = max(max(tNearX, tNearY), tNearZ);
+	//AABBとの衝突店（貫通店）のtが小さいほう
+	float tMax = min(min(tFarX, tFarY), tFarZ);
+
+	if (tMin <= tMax) {
+		return true;
+	}
+
+	return false;
+}
