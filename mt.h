@@ -1448,13 +1448,15 @@ void DrawSegment(const Segment& segment, const Matrix4x4& viewProjectionMatrix, 
 /// <param name="segment"></param>
 /// <returns></returns>
 bool isCollision(const Triangle& triangle, const Segment& segment) {
-	Vector3 v01 = triangle.vertices[0] - triangle.vertices[1];
-	Vector3 v12 = triangle.vertices[1] - triangle.vertices[2];
-	Vector3 v20 = triangle.vertices[2] - triangle.vertices[0];
-	segment;
-	//Vector3 p = segment.origin +  
-	//
-	//	Vector3 v0p{}, v1p{}, v2p{};
+	Vector3 v01 = triangle.vertices[1] - triangle.vertices[0];
+	Vector3 v12 = triangle.vertices[2] - triangle.vertices[1];
+	Vector3 v20 = triangle.vertices[0] - triangle.vertices[2];
+
+	float t = 
+	
+	Vector3 p = segment.origin +  
+	
+		Vector3 v0p{}, v1p{}, v2p{};
 
 	return false;
 }
