@@ -6,6 +6,7 @@
 #include <cmath>
 #include "Vector3.h"
 #include <imgui.h>
+#include <algorithm>
 
 
 const int kWindowHeight = 720;
@@ -1447,19 +1448,19 @@ void DrawSegment(const Segment& segment, const Matrix4x4& viewProjectionMatrix, 
 /// <param name="triangle"></param>
 /// <param name="segment"></param>
 /// <returns></returns>
-bool isCollision(const Triangle& triangle, const Segment& segment) {
-	Vector3 v01 = triangle.vertices[1] - triangle.vertices[0];
-	Vector3 v12 = triangle.vertices[2] - triangle.vertices[1];
-	Vector3 v20 = triangle.vertices[0] - triangle.vertices[2];
-
-	float t = 
-	
-	Vector3 p = segment.origin +  
-	
-		Vector3 v0p{}, v1p{}, v2p{};
-
-	return false;
-}
+//bool IsCollision(const Triangle& triangle, const Segment& segment) {
+//	Vector3 v01 = triangle.vertices[1] - triangle.vertices[0];
+//	Vector3 v12 = triangle.vertices[2] - triangle.vertices[1];
+//	Vector3 v20 = triangle.vertices[0] - triangle.vertices[2];
+//
+//	float t =
+//
+//		Vector3 p = segment.origin +
+//
+//		Vector3 v0p{}, v1p{}, v2p{};
+//
+//	return false;
+//}
 
 void DrawTriangle(const Triangle& triangle, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
 	Vector3 start[3];
@@ -1472,7 +1473,13 @@ void DrawTriangle(const Triangle& triangle, const Matrix4x4& viewProjectionMatri
 	}
 }
 
-bool isCollision(const AABB& aabb1, const AABB& aabb2) {
+/// <summary>
+/// AABB同士の衝突判定
+/// </summary>
+/// <param name="aabb1"></param>
+/// <param name="aabb2"></param>
+/// <returns></returns>
+bool IsCollision(const AABB& aabb1, const AABB& aabb2) {
 	if ((aabb1.min.x <= aabb2.max.x && aabb1.max.x >= aabb2.min.x) &&
 		(aabb1.min.y <= aabb2.max.y && aabb1.max.y >= aabb2.min.y) &&
 		(aabb1.min.z <= aabb2.max.z && aabb1.max.z >= aabb2.min.z)) {
@@ -1482,22 +1489,29 @@ bool isCollision(const AABB& aabb1, const AABB& aabb2) {
 	return false;
 }
 
+/// <summary>
+/// AABBの描画
+/// </summary>
+/// <param name="aabb"></param>
+/// <param name="viewProjectionMatrix"></param>
+/// <param name="viewportMatrix"></param>
+/// <param name="color"></param>
 void DrawAABB(const AABB& aabb, const Matrix4x4& viewProjectionMatrix, const Matrix4x4 viewportMatrix, uint32_t color) {
 	Vector3 end[12]{};
 	Vector3 start[12]{};
 
 	start[0] = Transform(Transform(aabb.min, viewProjectionMatrix), viewportMatrix);
-	end[0] = Transform(Transform({aabb.min.x, aabb.min.y, aabb.max.z}, viewProjectionMatrix), viewportMatrix);
+	end[0] = Transform(Transform({ aabb.min.x, aabb.min.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
 	start[1] = Transform(Transform(aabb.min, viewProjectionMatrix), viewportMatrix);
-	end[1] = Transform(Transform({aabb.min.x, aabb.max.y, aabb.min.z}, viewProjectionMatrix), viewportMatrix);
+	end[1] = Transform(Transform({ aabb.min.x, aabb.max.y, aabb.min.z }, viewProjectionMatrix), viewportMatrix);
 	start[2] = Transform(Transform({ aabb.min.x, aabb.max.y, aabb.min.z }, viewProjectionMatrix), viewportMatrix);
-	end[2] = Transform(Transform({aabb.min.x, aabb.max.y, aabb.max.z}, viewProjectionMatrix), viewportMatrix);
+	end[2] = Transform(Transform({ aabb.min.x, aabb.max.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
 	start[3] = Transform(Transform({ aabb.min.x, aabb.max.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
-	end[3] = Transform(Transform({aabb.min.x, aabb.min.y, aabb.max.z}, viewProjectionMatrix), viewportMatrix);
+	end[3] = Transform(Transform({ aabb.min.x, aabb.min.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
 	start[4] = Transform(Transform({ aabb.min.x, aabb.min.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
-	end[4] = Transform(Transform({aabb.max.x, aabb.min.y, aabb.max.z}, viewProjectionMatrix), viewportMatrix);
+	end[4] = Transform(Transform({ aabb.max.x, aabb.min.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
 	start[5] = Transform(Transform(aabb.min, viewProjectionMatrix), viewportMatrix);
-	end[5] = Transform(Transform({aabb.max.x, aabb.min.y, aabb.min.z}, viewProjectionMatrix), viewportMatrix);
+	end[5] = Transform(Transform({ aabb.max.x, aabb.min.y, aabb.min.z }, viewProjectionMatrix), viewportMatrix);
 	start[6] = Transform(Transform({ aabb.min.x, aabb.max.y, aabb.min.z }, viewProjectionMatrix), viewportMatrix);
 	end[6] = Transform(Transform({ aabb.max.x, aabb.max.y, aabb.min.z }, viewProjectionMatrix), viewportMatrix);
 	start[7] = Transform(Transform({ aabb.min.x, aabb.max.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
@@ -1515,3 +1529,27 @@ void DrawAABB(const AABB& aabb, const Matrix4x4& viewProjectionMatrix, const Mat
 		Novice::DrawLine(int(start[i].x), int(start[i].y), int(end[i].x), int(end[i].y), color);
 	}
 }
+
+/// <summary>
+/// AABBと球の衝突判定
+/// </summary>
+/// <param name="aabb"></param>
+/// <param name="sphere"></param>
+/// <returns></returns>
+bool IsCollision(const AABB& aabb, const Sphere& sphere) {
+	//最近接点を求める
+	Vector3 closestPoint{ std::clamp(sphere.center.x, aabb.min.x, aabb.max.x),
+						std::clamp(sphere.center.y, aabb.min.y, aabb.max.y),
+						std::clamp(sphere.center.z, aabb.min.z, aabb.max.z) };
+
+	//最近接点と球の中心との距離を求める
+	float distance = Length(closestPoint - sphere.center);
+
+	//距離が半径よりも小さければ衝突
+	if (distance <= sphere.radius) {
+		return true;
+	}
+
+	return false;
+}
+
