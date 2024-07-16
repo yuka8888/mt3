@@ -55,7 +55,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			color = WHITE;
 		}
 
-
 		ImGui::DragFloat3("segment.origin", &segment.origin.x, 0.01f);
 		ImGui::DragFloat3("segment.diff", &segment.diff.x, 0.01f);
 		ImGui::DragFloat3("triangle.vertices[0]", &triangle.vertices[0].x, 0.01f);
