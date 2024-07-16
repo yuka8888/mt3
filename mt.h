@@ -1461,10 +1461,20 @@ bool isCollision(const Triangle& triangle, const Segment& segment) {
 	Vector3 tb = Multiply(t, segment.diff);
 
 	Vector3 p = segment.origin + tb;
-	
+
 	Vector3 v0p = p - triangle.vertices[0];
 	Vector3 v1p = p - triangle.vertices[1];
 	Vector3 v2p = p - triangle.vertices[2];
+
+	Vector3 cross01 = Cross(v01, v1p);
+	Vector3 cross12 = Cross(v12, v2p);
+	Vector3 cross20 = Cross(v20, v0p);
+
+	if (Dot(cross01, plane.normal) >= 0.0f &&
+		Dot(cross12, plane.normal) >= 0.0f &&
+		Dot(cross20, plane.normal) >= 0.0f) {
+		return true;
+	}
 
 	return false;
 }
@@ -1495,17 +1505,17 @@ void DrawAABB(const AABB& aabb, const Matrix4x4& viewProjectionMatrix, const Mat
 	Vector3 start[12]{};
 
 	start[0] = Transform(Transform(aabb.min, viewProjectionMatrix), viewportMatrix);
-	end[0] = Transform(Transform({aabb.min.x, aabb.min.y, aabb.max.z}, viewProjectionMatrix), viewportMatrix);
+	end[0] = Transform(Transform({ aabb.min.x, aabb.min.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
 	start[1] = Transform(Transform(aabb.min, viewProjectionMatrix), viewportMatrix);
-	end[1] = Transform(Transform({aabb.min.x, aabb.max.y, aabb.min.z}, viewProjectionMatrix), viewportMatrix);
+	end[1] = Transform(Transform({ aabb.min.x, aabb.max.y, aabb.min.z }, viewProjectionMatrix), viewportMatrix);
 	start[2] = Transform(Transform({ aabb.min.x, aabb.max.y, aabb.min.z }, viewProjectionMatrix), viewportMatrix);
-	end[2] = Transform(Transform({aabb.min.x, aabb.max.y, aabb.max.z}, viewProjectionMatrix), viewportMatrix);
+	end[2] = Transform(Transform({ aabb.min.x, aabb.max.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
 	start[3] = Transform(Transform({ aabb.min.x, aabb.max.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
-	end[3] = Transform(Transform({aabb.min.x, aabb.min.y, aabb.max.z}, viewProjectionMatrix), viewportMatrix);
+	end[3] = Transform(Transform({ aabb.min.x, aabb.min.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
 	start[4] = Transform(Transform({ aabb.min.x, aabb.min.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
-	end[4] = Transform(Transform({aabb.max.x, aabb.min.y, aabb.max.z}, viewProjectionMatrix), viewportMatrix);
+	end[4] = Transform(Transform({ aabb.max.x, aabb.min.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
 	start[5] = Transform(Transform(aabb.min, viewProjectionMatrix), viewportMatrix);
-	end[5] = Transform(Transform({aabb.max.x, aabb.min.y, aabb.min.z}, viewProjectionMatrix), viewportMatrix);
+	end[5] = Transform(Transform({ aabb.max.x, aabb.min.y, aabb.min.z }, viewProjectionMatrix), viewportMatrix);
 	start[6] = Transform(Transform({ aabb.min.x, aabb.max.y, aabb.min.z }, viewProjectionMatrix), viewportMatrix);
 	end[6] = Transform(Transform({ aabb.max.x, aabb.max.y, aabb.min.z }, viewProjectionMatrix), viewportMatrix);
 	start[7] = Transform(Transform({ aabb.min.x, aabb.max.y, aabb.max.z }, viewProjectionMatrix), viewportMatrix);
